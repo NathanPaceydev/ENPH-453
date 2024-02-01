@@ -453,6 +453,7 @@ if __name__ == "__main__":
 
     if True:
         import matplotlib.pyplot as plt
+        
         fig1 = plt.figure(1, figsize=(8, 8))
 
         ax1 = fig1.add_subplot(111)
@@ -497,3 +498,139 @@ if __name__ == "__main__":
         # Save the DataFrame to a CSV file
         csv_filename = str(filename).split('.')[0] + '.csv'
         df.to_csv(csv_filename, index=False)
+        
+        # ################## fitted bs
+        import matplotlib.pyplot as plt
+        import numpy as np
+        from scipy.optimize import curve_fit
+        from scipy.stats import norm
+
+        # Function to calculate the Gaussian probability for each channel
+        def gaussian(x, amplitude, mean, std):
+            return amplitude * norm.pdf(x, mean, std)
+
+        # Assuming 'chan' and 'chan_data' contain your channel numbers and count data
+        # chan = np.array([...])
+        # chan_data = np.array([...])
+
+        # Initial guesses for the Gaussian parameters
+        initial_amplitude_guess = np.max(chan_data)
+        initial_mean_guess = chan[np.argmax(chan_data)]  # channel with max count
+        initial_std_guess = np.std(chan)  # a rough estimate of the standard deviation
+
+        # Fit the Gaussian distribution to the data
+        params, params_covariance = curve_fit(gaussian, chan, chan_data, 
+                                            p0=[initial_amplitude_guess, initial_mean_guess, initial_std_guess])
+
+        # Extract the parameters
+        amplitude_fit, mean_fit, std_fit = params
+
+        # Calculate the Gaussian curve
+        x_fit = np.linspace(chan.min(), chan.max(), len(chan))
+        y_fit = gaussian(x_fit, amplitude_fit, mean_fit, std_fit)
+
+        # Calculate root(N) error for each data point
+        errors = np.sqrt(chan_data)
+
+        # Plotting the original data points
+        fig2 = plt.figure(2, figsize=(8, 8))
+        ax2 = fig2.add_subplot(111)
+
+        # Plot the data with error bars
+        #ax2.errorbar(chan, chan_data, yerr=errors, fmt='k.', label='Data with Root(N) Error')
+        ax2.errorbar(chan, chan_data, fmt='k.', label='Data with Root(N) Error')
+        # Plot the best fit Gaussian distribution curve
+        ax2.plot(x_fit, y_fit, 'r-', label=f'Gaussian Fit: $\mu={mean_fit:.2f}$, $\sigma={std_fit:.2f}$')
+
+        # Find and plot the max count point
+        max_count_index = np.argmax(chan_data)
+        max_count_channel = chan[max_count_index]
+        max_count_value = chan_data[max_count_index]
+        ax2.plot(max_count_channel, max_count_value, 'ro', label='Max Count')
+
+        # Annotate the max count point
+        vertical_offset = 50
+        ax2.annotate(f'Channel: {max_count_channel}\nCount: {max_count_value}',
+                    xy=(max_count_channel, max_count_value),
+                    xytext=(0, vertical_offset), textcoords='offset points',
+                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2'),
+                    bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=1))
+
+        # Set labels and title
+        ax2.set_xlabel('Channels')
+        ax2.set_ylabel('Counts')
+        ax2.set_title('Fitted no error File read: ' + filename)
+        ax2.legend()
+
+        # Save the plot as a JPG file
+        plt.savefig('Fitted no error'+ str(filename)+'.jpg', format='jpg', dpi=300)
+
+        # Show the plot
+        plt.show()
+        plt.clf()  # Clear the current figure
+
+        
+        #################### error
+        # Function to calculate the Gaussian probability for each channel
+        def gaussian(x, amplitude, mean, std):
+            return amplitude * norm.pdf(x, mean, std)
+
+        # Assuming 'chan' and 'chan_data' contain your channel numbers and count data
+        # chan = np.array([...])
+        # chan_data = np.array([...])
+
+        # Initial guesses for the Gaussian parameters
+        initial_amplitude_guess = np.max(chan_data)
+        initial_mean_guess = chan[np.argmax(chan_data)]  # channel with max count
+        initial_std_guess = np.std(chan)  # a rough estimate of the standard deviation
+
+        # Fit the Gaussian distribution to the data
+        params, params_covariance = curve_fit(gaussian, chan, chan_data, 
+                                            p0=[initial_amplitude_guess, initial_mean_guess, initial_std_guess])
+
+        # Extract the parameters
+        amplitude_fit, mean_fit, std_fit = params
+
+        # Calculate the Gaussian curve
+        x_fit = np.linspace(chan.min(), chan.max(), len(chan))
+        y_fit = gaussian(x_fit, amplitude_fit, mean_fit, std_fit)
+
+        # Calculate root(N) error for each data point
+        errors = np.sqrt(chan_data)
+
+        # Plotting the original data points
+        fig3 = plt.figure(3, figsize=(8, 8))
+        ax3 = fig3.add_subplot(111)
+
+        # Plot the data with error bars
+        #ax2.errorbar(chan, chan_data, yerr=errors, fmt='k.', label='Data with Root(N) Error')
+        ax3.errorbar(chan, chan_data, yerr=errors,fmt='k.', label='Data with Root(N) Error')
+        # Plot the best fit Gaussian distribution curve
+        ax3.plot(x_fit, y_fit, 'r-', label=f'Gaussian Fit: $\mu={mean_fit:.2f}$, $\sigma={std_fit:.2f}$')
+
+        # Find and plot the max count point
+        max_count_index = np.argmax(chan_data)
+        max_count_channel = chan[max_count_index]
+        max_count_value = chan_data[max_count_index]
+        ax3.plot(max_count_channel, max_count_value, 'ro', label='Max Count')
+
+        # Annotate the max count point
+        vertical_offset = 50
+        ax3.annotate(f'Channel: {max_count_channel}\nCount: {max_count_value}',
+                    xy=(max_count_channel, max_count_value),
+                    xytext=(0, vertical_offset), textcoords='offset points',
+                    arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=.2'),
+                    bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", lw=1))
+
+        # Set labels and title
+        ax3.set_xlabel('Channels')
+        ax3.set_ylabel('Counts')
+        ax3.set_title('Fitted error File read: ' + filename)
+        ax3.legend()
+
+        # Save the plot as a JPG file
+        plt.savefig('Fitted error'+ str(filename)+'.jpg', format='jpg', dpi=300)
+
+        # Show the plot
+        plt.show()
+
